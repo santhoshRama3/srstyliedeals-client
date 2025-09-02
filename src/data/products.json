@@ -1,0 +1,92 @@
+[
+  {
+    "id": 1,
+    "name": "Men Checked Polo Neck Cotton Blend T-Shirt",
+    "brand": "AUSK",
+    "Price": 349,
+    "OriginalPrice": 1299,
+    "ImageURL": "https://placehold.co/400x500/34D399/FFFFFF?text=Product+1",
+    "category": "mens-polo-tshirts"
+  },
+  {
+    "id": 2,
+    "name": "Men Solid Round Neck Polyester T-Shirt",
+    "brand": "VOLTMIN",
+    "Price": 258,
+    "OriginalPrice": 1199,
+    "ImageURL": "https://placehold.co/400x500/60A5FA/FFFFFF?text=Product+2",
+    "category": "mens-tshirts"
+  },
+  {
+    "id": 3,
+    "name": "Men Printed Crew Neck Pure Cotton T-Shirt",
+    "brand": "Magneto",
+    "Price": 395,
+    "OriginalPrice": 1499,
+    "ImageURL": "https://placehold.co/400x500/FBBF24/FFFFFF?text=Product+3",
+    "category": "womens-traditional"
+  },
+  {
+    "id": 4,
+    "name": "Men Printed Round Neck Pure Cotton T-Shirt",
+    "brand": "Stitchez",
+    "Price": 285,
+    "OriginalPrice": 999,
+    "ImageURL": "https://placehold.co/400x500/F87171/FFFFFF?text=Product+4",
+    "category": "mens-casual-shirts"
+  },
+  {
+    "id": 5,
+    "name": "Men Solid Polo Neck T-Shirt', brand",
+    "brand": "Eyebogler",
+    "Price": 286,
+    "OriginalPrice": 1199,
+    "ImageURL": "https://placehold.co/400x500/A78BFA/FFFFFF?text=Product+5",
+    "category": "mens-polo-tshirts"
+  },
+  {
+    "id": 6,
+    "name": "Graphic Print Round Neck T-Shirt",
+    "brand": "Tokyo Talkies",
+    "Price": 450,
+    "OriginalPrice": 1299,
+    "ImageURL": "https://placehold.co/400x500/34D399/FFFFFF?text=Product+1",
+    "category": "mens-tshirts"
+  },
+  {
+    "id": 7,
+    "name": "Men Checked Polo Neck Cotton Blend T-Shirt",
+    "brand": "AUSK",
+    "Price": 349,
+    "OriginalPrice": 1199,
+    "ImageURL": "https://placehold.co/400x500/60A5FA/FFFFFF?text=Product+2",
+    "category": "womens-traditional"
+  },
+  {
+    "id": 8,
+    "name": "Men Solid Round Neck Polyester T-Shirt",
+    "brand": "VOLTMIN",
+    "Price": 258,
+    "OriginalPrice": 1499,
+    "ImageURL": "https://placehold.co/400x500/FBBF24/FFFFFF?text=Product+3",
+    "category": "mens-casual-shirts"
+  },
+  {
+    "id": 9,
+    "name": "Men Printed Crew Neck Pure Cotton T-Shirt",
+    "brand": "Magneto",
+    "Price": 395,
+    "OriginalPrice": 999,
+    "ImageURL": "https://placehold.co/400x500/F87171/FFFFFF?text=Product+4",
+    "category": "mens-polo-tshirts"
+  },
+  {
+    "id": 10,
+    "name": "Men Printed Round Neck Pure Cotton T-Shirt",
+    "brand": "Stitchez",
+    "Price": 285,
+    "OriginalPrice": 1199,
+    "ImageURL": "https://placehold.co/400x500/A78BFA/FFFFFF?text=Product+5",
+    "category": "mens-tshirts"
+  }
+]
