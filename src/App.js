@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useParams, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 
 // --- Reusable Constant for API URL ---
+// This will use your live Render URL in production and localhost in development
 const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:4000';
 
 // --- CSS Animations for Confetti & Dropdowns ---
@@ -232,42 +234,303 @@ const Footer = () => (
 );
 
 // --- Page & Content Components ---
-// All your page components like HomePage, ProductPage, etc. go here.
-// Make sure to update their fetch calls to use the `backendUrl` variable.
-// Example for HomePage:
+const OutfitPage = () => {
+    const [outfitData, setOutfitData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const { outfitCode } = useParams();
+
+    useEffect(() => {
+        if (outfitCode) {
+            fetch(`${backendUrl}/api/outfits/${outfitCode}`).then(res => { if (!res.ok) throw new Error('Outfit not found.'); return res.json(); }).then(data => { setOutfitData(data); }).catch(err => { setError(err.message); }).finally(() => { setLoading(false); });
+        }
+    }, [outfitCode]);
+
+    if (loading) return <div className="text-center p-12">Loading Outfit...</div>;
+    if (error) return <div className="text-center p-12 text-red-600 font-bold">{error}</div>;
+    if (!outfitData) return null;
+    return (<main className="container mx-auto p-4 md:p-8"><div className="mb-8 text-center"><h1 className="text-3xl md:text-4xl font-bold text-gray-800">{outfitData.name}</h1><p className="text-lg text-gray-500 mt-2">Outfit Code: {outfitData.outfitCode}</p></div><div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">{outfitData.products.map(product => (<ProductCard key={product.id} product={product} />))}</div></main>);
+};
+const CelebrityAvatar = ({ name, img, slug }) => (<Link to={`/celebrity/${slug}`} className="flex flex-col items-center flex-shrink-0 mx-2 md:mx-4 text-center w-24 group"><div className="transform transition-transform duration-300 ease-in-out group-hover:scale-110"><img src={img} alt={name} className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white shadow-md object-cover" /><p className="mt-2 text-sm font-medium text-gray-700">{name}</p></div></Link>);
+const SubCategoryItem = ({ name, img, slug }) => (<Link to={`/category/${slug}`} className="group text-center"><div className="overflow-hidden rounded-lg"><img src={img} alt={name} className="w-full h-full object-cover aspect-square bg-gray-100 transform transition-transform duration-300 ease-in-out group-hover:scale-110" /></div><p className="mt-2 text-sm font-semibold text-gray-800">{name}</p></Link>);
+const CategoryCard = ({ title, subcategories }) => (<div className="bg-white rounded-lg shadow-lg p-4 md:p-6 flex flex-col"><h3 className="text-xl font-bold text-gray-800 mb-4 text-center">{title}</h3><div className="grid grid-cols-2 gap-4">{subcategories.map((sub) => (<SubCategoryItem key={sub.subcategorySlug} name={sub.subcategoryName} img={sub.heroImageUrl} slug={sub.subcategorySlug} />))}</div></div>);
+const Sidebar = ({
+    selectedColors, priceRange, selectedDiscount, selectedRating,
+    onColorChange, onPriceChange, onDiscountChange, onRatingChange, onClearAll,
+}) => {
+    const [localPriceRange, setLocalPriceRange] = useState(priceRange);
+    useEffect(() => { setLocalPriceRange(priceRange); }, [priceRange]);
+    const handleApplyPrice = () => onPriceChange(localPriceRange);
+    const handleCheckboxChange = (handler, value, list) => { const newList = list.includes(value) ? list.filter(item => item !== value) : [...list, value]; handler(newList); };
+    const handleRadioChange = (handler, value, current) => { const newValue = current === value ? null : value; handler(newValue); };
+    const colors = [{ name: 'Black', hex: '#000000' }, { name: 'White', hex: '#FFFFFF', border: true }, { name: 'Blue', hex: '#3B82F6' }, { name: 'Red', hex: '#EF4444' }, { name: 'Green', hex: '#22C55E' }, { name: 'Gray', hex: '#6B7280' }];
+    const discounts = [50, 40, 30, 20, 10];
+    const ratings = [4, 3];
+    const FilterSection = ({ title, children }) => (<div className="border-b py-4"><h3 className="font-semibold text-gray-800 mb-3">{title}</h3>{children}</div>);
+    return (<aside className="w-full md:w-1/4 lg:w-1/5 p-4 bg-white shadow-lg rounded-lg h-fit md:sticky md:top-24"><div className="flex justify-between items-center border-b pb-3 mb-2"><h2 className="text-xl font-bold">Filters</h2><button onClick={onClearAll} className="text-sm font-medium text-blue-600 hover:text-blue-800">CLEAR ALL</button></div><FilterSection title="PRICE"><div className="flex justify-between items-center text-sm text-gray-700 space-x-2"><input type="number" placeholder="Min" value={localPriceRange.min} onChange={(e) => setLocalPriceRange({...localPriceRange, min: parseInt(e.target.value) || 0})} className="w-full p-2 border rounded"/><span className="mx-1">-</span><input type="number" placeholder="Max" value={localPriceRange.max} onChange={(e) => setLocalPriceRange({...localPriceRange, max: parseInt(e.target.value) || 0})} className="w-full p-2 border rounded"/><button onClick={handleApplyPrice} className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Go</button></div></FilterSection><FilterSection title="COLOR"><div className="flex flex-wrap gap-3">{colors.map(color => (<button key={color.name} type="button" onClick={() => handleCheckboxChange(onColorChange, color.name, selectedColors)} className={`w-8 h-8 rounded-full ${color.border ? 'border border-gray-300' : ''} ${selectedColors.includes(color.name) ? 'ring-2 ring-blue-500 ring-offset-1' : ''}`} style={{ backgroundColor: color.hex }} aria-label={`Select color ${color.name}`}/>))}</div></FilterSection><FilterSection title="DISCOUNT"><div className="space-y-2">{discounts.map(d => (<label key={d} className="flex items-center text-sm cursor-pointer"><input type="radio" name="discount" checked={selectedDiscount === d} onChange={() => handleRadioChange(onDiscountChange, d, selectedDiscount)} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"/><span className="ml-2 text-gray-700">{d}% and above</span></label>))}</div></FilterSection><FilterSection title="RATINGS"><div className="space-y-2">{ratings.map(r => (<label key={r} className="flex items-center text-sm cursor-pointer"><input type="radio" name="rating" checked={selectedRating === r} onChange={() => handleRadioChange(onRatingChange, r, selectedRating)} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"/><span className="ml-2 text-gray-700 flex items-center">{r}★ & Above</span></label>))}</div></FilterSection></aside>);
+};
+const ProductCard = ({ product }) => {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const intervalRef = useRef(null);
+    const [isLiked, setIsLiked] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [isInCart, setIsInCart] = useState(false);
+    let images = [];
+    if (typeof product.imageUrls === 'string' && product.imageUrls.length > 0) { images = product.imageUrls.split(','); } else { images = ['https://placehold.co/400x500/cccccc/969696?text=No+Image']; }
+    useEffect(() => { 
+        const savedItems = JSON.parse(localStorage.getItem('savedItems')) || []; 
+        if (savedItems.some(item => item.id === product.id)) { setIsLiked(true); } 
+        const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+        if (cartItems.some(item => item.id === product.id)) { setIsInCart(true); }
+    }, [product.id]);
+    const handleLikeClick = (e) => {
+        e.preventDefault(); 
+        const savedItems = JSON.parse(localStorage.getItem('savedItems')) || [];
+        const isAlreadySaved = savedItems.some(item => item.id === product.id);
+        let updatedItems;
+        if (isAlreadySaved) { updatedItems = savedItems.filter(item => item.id !== product.id); setIsLiked(false); } else { updatedItems = [...savedItems, product]; setIsLiked(true); }
+        localStorage.setItem('savedItems', JSON.stringify(updatedItems));
+    };
+    const handleAddToCartClick = (e) => {
+        e.preventDefault();
+        if (isInCart) return;
+        const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+        const updatedCart = [...cartItems, product];
+        localStorage.setItem('cartItems', JSON.stringify(updatedCart));
+        setIsInCart(true);
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 1000);
+    };
+    const hasMultipleImages = images.length > 1;
+    const startCarousel = () => { if (hasMultipleImages) intervalRef.current = setInterval(() => { setCurrentImageIndex(prev => (prev + 1) % images.length); }, 1500); };
+    const stopCarousel = () => { clearInterval(intervalRef.current); setCurrentImageIndex(0); };
+    useEffect(() => { return () => clearInterval(intervalRef.current); }, []);
+    const imageWrapperStyle = { transform: `translateX(-${currentImageIndex * 100}%)` };
+    const discount = product.originalPrice && product.price ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+    return (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden group relative h-full flex flex-col" onMouseEnter={startCarousel} onMouseLeave={stopCarousel}>
+            <button onClick={handleLikeClick} className={`absolute top-2 right-2 p-1.5 rounded-full z-10 transition-colors duration-200 ${isLiked ? 'text-red-500 bg-red-100/80' : 'text-gray-500 bg-white/80'}`}><HeartIcon isFilled={isLiked} /></button>
+            <a href={product.productUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col flex-grow">
+                <div className="h-64 w-full overflow-hidden relative transform transition-transform duration-500 group-hover:scale-105"><div className="flex h-full w-full transition-transform duration-700 ease-in-out" style={imageWrapperStyle}>{images.map((imgSrc, index) => (<img key={index} src={imgSrc} alt={`${product.name} - view ${index + 1}`} className="h-full w-full flex-shrink-0 object-cover bg-gray-200" />))}</div></div>
+                <div className="p-4 flex flex-col flex-grow">
+                    <p className="text-sm text-gray-500">{product.brand || 'N/A'}</p>
+                    <h4 className="font-semibold text-gray-800 truncate">{product.name || 'No Name'}</h4>
+                    <div className="flex items-center mt-2"><p className="text-lg font-bold">₹{product.price || '0'}</p>{product.originalPrice && (<><p className="text-sm text-gray-500 line-through ml-2">₹{product.originalPrice}</p><p className="text-sm text-green-600 font-semibold ml-2">{discount}% off</p></>)}</div>
+                    <div className="flex-grow"></div>
+                    {(product.rating || product.reviews) && (<div className="flex items-center text-sm text-gray-600 mt-2 border-t pt-2">{product.rating && (<><StarIcon /><span>{product.rating}</span></>)}{product.rating && product.reviews && (<span className="mx-2">|</span>)}{product.reviews && (<span>{product.reviews}</span>)}</div>)}
+                    <div className="relative mt-4">
+                        <button onClick={handleAddToCartClick} disabled={isInCart} className={`w-full font-semibold py-2 rounded-lg transition-colors ${ isInCart ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>{isInCart ? 'Added ✓' : 'Add to Cart'}</button>
+                        <ConfettiSpray isActive={showConfetti} />
+                    </div>
+                </div>
+            </a>
+        </div>
+    );
+};
+const ProductCarousel = ({ title, products, slug }) => {
+    const scrollRef = useRef(null);
+    const scroll = (direction) => { const { current } = scrollRef; if (current) { const scrollAmount = direction === 'left' ? -current.offsetWidth : current.offsetWidth; current.scrollBy({ left: scrollAmount, behavior: 'smooth' }); } };
+    if (!products || products.length === 0) return null;
+    return (<section className="mb-12"><div className="flex justify-between items-center mb-4"><h2 className="text-2xl font-bold text-gray-800">{title}</h2>{slug && (<Link to={`/category/${slug}`} className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors">SEE ALL</Link>)}</div><div className="relative group"><div ref={scrollRef} className="flex overflow-x-auto space-x-4 pb-4 scrollbar-hide">{products.map(product => (<div key={product.id} className="flex-shrink-0 w-56 md:w-64"><ProductCard product={product} /></div>))}</div><button onClick={() => scroll('left')} className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-white disabled:opacity-0 disabled:cursor-not-allowed"><LeftArrowIcon /></button><button onClick={() => scroll('right')} className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-white disabled:opacity-0 disabled:cursor-not-allowed"><RightArrowIcon /></button></div><style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style></section>);
+};
+const ProductGrid = ({ products, sortType, setSortType }) => {
+    const SortButtons = () => (<div className="flex items-center text-sm flex-wrap"><span className="font-semibold mr-2">Sort By</span><button type="button" onClick={() => setSortType('popularity')} className={`px-2 hover:text-blue-500 ${sortType === 'popularity' ? 'text-blue-600 font-semibold' : ''}`}>Popularity</button><button type="button" onClick={() => setSortType('price-asc')} className={`px-2 hover:text-blue-500 ${sortType === 'price-asc' ? 'text-blue-600 font-semibold' : ''}`}>Price -- Low to High</button><button type="button" onClick={() => setSortType('price-desc')} className={`px-2 hover:text-blue-500 ${sortType === 'price-desc' ? 'text-blue-600 font-semibold' : ''}`}>Price -- High to Low</button><button type="button" onClick={() => setSortType('newest')} className={`px-2 hover:text-blue-500 ${sortType === 'newest' ? 'text-blue-600 font-semibold' : ''}`}>Newest First</button></div>);
+    return (
+        <div className="w-full">
+            <div className="flex justify-between items-center mb-4 flex-wrap">
+                <div className="text-sm text-gray-600 mb-2 md:mb-0">Showing {products.length} products</div>
+                <SortButtons />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {products.map(product => <ProductCard key={product.id} product={product} />)}
+            </div>
+        </div>
+    );
+};
 const HomePage = () => {
     const [celebrities, setCelebrities] = useState([]);
     const [categories, setCategories] = useState([]);
-
     useEffect(() => {
-        // UPDATED API URL
-        fetch(`${backendUrl}/api/celebrities`)
-            .then(res => res.json())
-            .then(data => setCelebrities(data))
-            .catch(err => console.error("Failed to fetch celebrities:", err));
-        
-        // UPDATED API URL & LOGIC
-        fetch(`${backendUrl}/api/categories`)
-            .then(res => res.json())
-            .then(data => {
-                const grouped = data.reduce((acc, item) => {
-                    let group = acc.find(g => g.title === item.mainCategoryTitle);
-                    if (!group) {
-                        group = { title: item.mainCategoryTitle, subcategories: [] };
-                        acc.push(group);
-                    }
-                    group.subcategories.push(item);
-                    return acc;
-                }, []);
-                setCategories(grouped);
-            })
-            .catch(err => console.error("Failed to fetch categories:", err));
+        fetch(`${backendUrl}/api/celebrities`).then(res => res.json()).then(data => setCelebrities(data)).catch(err => console.error("Failed to fetch celebrities:", err));
+        fetch(`${backendUrl}/api/categories`).then(res => res.json()).then(data => {
+            const grouped = data.reduce((acc, item) => { let group = acc.find(g => g.title === item.mainCategoryTitle); if (!group) { group = { title: item.mainCategoryTitle, subcategories: [] }; acc.push(group); } group.subcategories.push(item); return acc; }, []);
+            setCategories(grouped);
+        }).catch(err => console.error("Failed to fetch categories:", err));
+    }, []);
+    const extendedCelebrities = [...(celebrities || []), ...(celebrities || [])];
+    return (<><style>{`@keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .animate-scroll { animation: scroll 40s linear infinite; }`}</style><main className="container mx-auto p-4 md:p-8"><section className="mb-12"><h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 text-center">Top Celebrity Styles</h2><div className="relative w-full overflow-hidden"><div className="flex w-max animate-scroll hover:[animation-play-state:paused]">{extendedCelebrities.map((celeb, index) => (<CelebrityAvatar key={`${celeb.slug}-${index}`} name={celeb.name} img={celeb.imgUrl} slug={celeb.slug} />))}</div></div></section><section><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">{categories.map((cat) => ( <CategoryCard key={cat.title} title={cat.title} subcategories={cat.subcategories} />))}</div></section></main></>);
+};
+const ProductPage = () => {
+    const [products, setProducts] = useState([]);
+    const [allProducts, setAllProducts] = useState([]); 
+    const [pageTitle, setPageTitle] = useState('Products');
+    const [sortType, setSortType] = useState('popularity');
+    const [selectedColors, setSelectedColors] = useState([]);
+    const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
+    const [selectedDiscount, setSelectedDiscount] = useState(null);
+    const [selectedRating, setSelectedRating] = useState(null);
+    const { slug } = useParams();
+    const location = useLocation();
+    const pathType = location.pathname.split('/')[1]; 
+
+    useEffect(() => { 
+        fetch(`${backendUrl}/api/products`).then(res => res.json()).then(data => { 
+            if (Array.isArray(data)) setAllProducts(data); 
+            else console.error("API did not return an array of products:", data); 
+        }).catch(err => console.error("Failed to fetch products:", err)); 
     }, []);
 
-    // ... rest of the HomePage component is the same
+    useEffect(() => {
+        let filtered = [...allProducts];
+        if (pathType === 'celebrity') { 
+            filtered = allProducts.filter(p => p.celebritySlugs?.split(',').includes(slug)); 
+            const celebName = allProducts.find(p => p.celebritySlugs?.split(',').includes(slug))?.celebritySlugs.split(',').find(s => s === slug)?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || slug;
+            setPageTitle(`${celebName}'s Style`); 
+        } 
+        else if (pathType === 'category') { 
+            filtered = allProducts.filter(p => p.subcategorySlug === slug); 
+            setPageTitle(filtered[0]?.subcategoryName || 'Category'); 
+        } 
+        else if (pathType === 'products') { 
+            filtered = allProducts.filter(p => p.mainCategorySlug === slug); 
+            const titleMap = { men: 'Men', women: 'Women', kids: 'Baby & Kids', accessories: 'Accessories' }; 
+            setPageTitle(titleMap[slug] || 'Products'); 
+        }
+        if (selectedColors.length > 0) { filtered = filtered.filter(p => p.color && selectedColors.map(c => c.toLowerCase()).includes(p.color.toLowerCase())); }
+        if (selectedRating) { filtered = filtered.filter(p => p.rating && parseFloat(p.rating) >= selectedRating); }
+        if (selectedDiscount) { filtered = filtered.filter(p => { if (!p.originalPrice || !p.price) return false; const discount = Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100); return discount >= selectedDiscount; }); }
+        filtered = filtered.filter(p => p.price >= priceRange.min && p.price <= priceRange.max);
+        const sorted = [...filtered].sort((a, b) => {
+            switch (sortType) {
+                case 'price-asc': return a.price - b.price;
+                case 'price-desc': return b.price - a.price;
+                case 'newest': return b.id - a.id;
+                case 'popularity': default: return (b.reviews || 0) - (a.reviews || 0);
+            }
+        });
+        setProducts(sorted);
+    }, [allProducts, pathType, slug, sortType, selectedColors, priceRange, selectedDiscount, selectedRating]);
+    
+    const clearAllFilters = () => { setSelectedColors([]); setPriceRange({ min: 0, max: 100000 }); setSelectedDiscount(null); setSelectedRating(null); };
+    
+    return (<div className="bg-gray-100 min-h-screen font-sans"><main className="container mx-auto p-4"><div className="text-sm text-gray-500 mb-2"><Link to="/" className="hover:text-blue-500">Home</Link> &gt; <span>{pageTitle}</span></div><div className="flex flex-col md:flex-row gap-8"><Sidebar selectedColors={selectedColors} priceRange={priceRange} selectedDiscount={selectedDiscount} selectedRating={selectedRating} onColorChange={setSelectedColors} onPriceChange={setPriceRange} onDiscountChange={setSelectedDiscount} onRatingChange={setSelectedRating} onClearAll={clearAllFilters} /><div className="w-full"><ProductGrid products={products} sortType={sortType} setSortType={setSortType} /></div></div></main></div>);
 };
+const SavedItemsPage = () => {
+    const [savedItems, setSavedItems] = useState([]);
+    useEffect(() => { const items = JSON.parse(localStorage.getItem('savedItems')) || []; setSavedItems(items); }, []);
+    return (<main className="container mx-auto p-4 md:p-8"><div className="mb-8"><h1 className="text-3xl font-bold text-gray-800">Your Saved Items</h1><p className="text-gray-500 mt-2">{savedItems.length} items in your wishlist</p></div>{savedItems.length > 0 ? (<div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">{savedItems.map(product => (<ProductCard key={product.id} product={product} />))}</div>) : (<div className="text-center py-16 bg-white rounded-lg shadow-md"><p className="text-gray-500">You haven't saved any items yet.</p></div>)}</main>);
+};
+const ProfilePage = () => {
+    const [userName, setUserName] = useState('');
+    const [allowEmails, setAllowEmails] = useState(true);
+    return(
+        <main className="container mx-auto p-4 md:p-8 max-w-2xl">
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Profile</h1>
+            <div className="bg-white p-6 rounded-lg shadow-lg space-y-6">
+                <div><label className="block text-sm font-medium text-gray-700">User Name</label><input type="text" value={userName} onChange={(e) => setUserName(e.target.value)} className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"/></div>
+                <div><label className="block text-sm font-medium text-gray-700">Change Password</label><input type="password" placeholder="New Password" className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"/></div>
+                <div className="flex items-start"><div className="flex items-center h-5"><input id="allowEmails" name="allowEmails" type="checkbox" checked={allowEmails} onChange={() => setAllowEmails(!allowEmails)} className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"/></div><div className="ml-3 text-sm"><label htmlFor="allowEmails" className="font-medium text-gray-700">Email Notifications</label><p className="text-gray-500">Allow us to send emails about new products and offers.</p></div></div>
+                <button className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">Save Changes</button>
+            </div>
+        </main>
+    );
+};
+const CartPage = () => {
+    const [cartItems, setCartItems] = useState([]);
+    const [total, setTotal] = useState(0);
+    useEffect(() => {
+        const items = JSON.parse(localStorage.getItem('cartItems')) || [];
+        setCartItems(items);
+        const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+        setTotal(totalPrice);
+    }, []);
+    const handleRemoveItem = (productId) => {
+        const updatedCart = cartItems.filter(item => item.id !== productId);
+        setCartItems(updatedCart);
+        localStorage.setItem('cartItems', JSON.stringify(updatedCart));
+        const totalPrice = updatedCart.reduce((sum, item) => sum + item.price, 0);
+        setTotal(totalPrice);
+    };
+    return (
+        <main className="container mx-auto p-4 md:p-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Shopping Cart</h1>
+            {cartItems.length > 0 ? (<div className="grid grid-cols-1 lg:grid-cols-3 gap-8"><div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg space-y-4">{cartItems.map(item => (<div key={item.id} className="flex items-center justify-between border-b pb-4 last:border-b-0"><a href={item.productUrl} target="_blank" rel="noopener noreferrer" className="flex items-center flex-grow hover:opacity-80 transition-opacity"><img src={item.imageUrls.split(',')[0]} alt={item.name} className="w-20 h-24 object-cover rounded-md mr-4"/><div><p className="font-semibold text-gray-800">{item.name}</p><p className="text-sm text-gray-500">{item.brand}</p></div></a><div className="flex items-center"><p className="font-bold text-lg mr-6">₹{item.price}</p><button onClick={() => handleRemoveItem(item.id)} className="text-gray-500 hover:text-red-600 p-2"><TrashIcon /></button></div></div>))}</div><div className="bg-white p-6 rounded-lg shadow-lg h-fit"><h2 className="text-xl font-bold border-b pb-4 mb-4">Order Summary</h2><div className="flex justify-between text-gray-600 mb-2"><span>Subtotal</span><span>₹{total.toFixed(2)}</span></div><div className="flex justify-between text-gray-600 mb-4"><span>Shipping</span><span>FREE</span></div><div className="flex justify-between text-gray-900 font-bold text-lg border-t pt-4"><span>Total</span><span>₹{total.toFixed(2)}</span></div><button className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors">Proceed to Checkout</button></div></div>) : (<div className="text-center py-16 bg-white rounded-lg shadow-md"><p className="text-gray-500 text-lg">Your cart is empty.</p></div>)}
+        </main>
+    );
+};
+const SearchResultsPage = () => {
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredResults, setFilteredResults] = useState([]);
+    const [selectedColors, setSelectedColors] = useState([]);
+    const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 });
+    const [selectedDiscount, setSelectedDiscount] = useState(null);
+    const [selectedRating, setSelectedRating] = useState(null);
+    const [sortType, setSortType] = useState('popularity');
+    const [searchParams] = useSearchParams();
 
-// ... and so on for all other page components ...
+    useEffect(() => {
+        const query = searchParams.get('query');
+        setSearchTerm(query);
+        if (query) {
+            fetch(`${backendUrl}/api/search?query=${query}`).then(res => { if (!res.ok) throw new Error('Search failed'); return res.json(); }).then(data => { if (Array.isArray(data)) { setResults(data); setFilteredResults(data); } }).catch(() => setError('Failed to fetch search results.')).finally(() => setLoading(false));
+        } else { setLoading(false); }
+    }, [searchParams]);
+
+    useEffect(() => {
+        let filtered = [...results];
+        if (selectedColors.length > 0) { filtered = filtered.filter(p => p.color && selectedColors.map(c => c.toLowerCase()).includes(p.color.toLowerCase())); }
+        if (selectedRating) { filtered = filtered.filter(p => p.rating && parseFloat(p.rating) >= selectedRating); }
+        if (selectedDiscount) { filtered = filtered.filter(p => { if (!p.originalPrice || !p.price) return false; const discount = Math.round(((p.originalPrice - p.price) / p.originalPrice) * 100); return discount >= selectedDiscount; }); }
+        filtered = filtered.filter(p => p.price >= priceRange.min && p.price <= priceRange.max);
+        const sorted = [...filtered].sort((a, b) => {
+            switch (sortType) {
+                case 'price-asc': return a.price - b.price;
+                case 'price-desc': return b.price - a.price;
+                case 'newest': return b.id - a.id;
+                case 'popularity': default: return (b.reviews || 0) - (a.reviews || 0);
+            }
+        });
+        setFilteredResults(sorted);
+    }, [results, sortType, selectedColors, priceRange, selectedDiscount, selectedRating]);
+    
+    const clearAllFilters = () => {
+        setSelectedColors([]);
+        setPriceRange({ min: 0, max: 100000 });
+        setSelectedDiscount(null);
+        setSelectedRating(null);
+    };
+
+    if (loading) return <div className="text-center p-12">Searching...</div>;
+    if (error) return <div className="text-center p-12 text-red-600 font-bold">{error}</div>;
+    
+    return (
+        <main className="container mx-auto p-4 md:p-8">
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-800">Search Results for "{searchTerm}"</h1>
+                <p className="text-gray-500 mt-1">{filteredResults.length} products found</p>
+            </div>
+            <div className="flex flex-col md:flex-row gap-8">
+                <Sidebar 
+                    selectedColors={selectedColors} priceRange={priceRange} selectedDiscount={selectedDiscount}
+                    selectedRating={selectedRating} onColorChange={setSelectedColors} onPriceChange={setPriceRange}
+                    onDiscountChange={setSelectedDiscount} onRatingChange={setSelectedRating} onClearAll={clearAllFilters}
+                />
+                <div className="w-full">
+                    {filteredResults.length > 0 ? (
+                        <ProductGrid products={filteredResults} sortType={sortType} setSortType={setSortType} />
+                    ) : (
+                        <div className="text-center py-16 bg-white rounded-lg shadow-md">
+                            <p className="text-gray-500 text-lg">No products matched your search or filters.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </main>
+    );
+};
 
 // --- Main App Component ---
 function AppContent() {
