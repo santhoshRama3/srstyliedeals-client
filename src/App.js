@@ -464,7 +464,7 @@ const CartPage = () => {
 
     return (
         <main className="container mx-auto p-4 md:p-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Shopping Cart</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-8">Cart</h1>
             {cartItems.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg space-y-4">
