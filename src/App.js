@@ -438,23 +438,81 @@ const ProfilePage = () => {
 const CartPage = () => {
     const [cartItems, setCartItems] = useState([]);
     const [total, setTotal] = useState(0);
+
     useEffect(() => {
         const items = JSON.parse(localStorage.getItem('cartItems')) || [];
         setCartItems(items);
-        const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+        
+        // --- FIX APPLIED HERE ---
+        // Convert item.price to a number before adding
+        const totalPrice = items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+        
         setTotal(totalPrice);
     }, []);
+
     const handleRemoveItem = (productId) => {
         const updatedCart = cartItems.filter(item => item.id !== productId);
         setCartItems(updatedCart);
         localStorage.setItem('cartItems', JSON.stringify(updatedCart));
-        const totalPrice = updatedCart.reduce((sum, item) => sum + item.price, 0);
+        
+        // --- FIX APPLIED HERE ---
+        // Also apply the fix when an item is removed
+        const totalPrice = updatedCart.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+        
         setTotal(totalPrice);
     };
+
     return (
         <main className="container mx-auto p-4 md:p-8">
             <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Shopping Cart</h1>
-            {cartItems.length > 0 ? (<div className="grid grid-cols-1 lg:grid-cols-3 gap-8"><div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg space-y-4">{cartItems.map(item => (<div key={item.id} className="flex items-center justify-between border-b pb-4 last:border-b-0"><a href={item.productUrl} target="_blank" rel="noopener noreferrer" className="flex items-center flex-grow hover:opacity-80 transition-opacity"><img src={item.imageUrls.split(',')[0]} alt={item.name} className="w-20 h-24 object-cover rounded-md mr-4"/><div><p className="font-semibold text-gray-800">{item.name}</p><p className="text-sm text-gray-500">{item.brand}</p></div></a><div className="flex items-center"><p className="font-bold text-lg mr-6">₹{item.price}</p><button onClick={() => handleRemoveItem(item.id)} className="text-gray-500 hover:text-red-600 p-2"><TrashIcon /></button></div></div>))}</div><div className="bg-white p-6 rounded-lg shadow-lg h-fit"><h2 className="text-xl font-bold border-b pb-4 mb-4">Order Summary</h2><div className="flex justify-between text-gray-600 mb-2"><span>Subtotal</span><span>₹{total.toFixed(2)}</span></div><div className="flex justify-between text-gray-600 mb-4"><span>Shipping</span><span>FREE</span></div><div className="flex justify-between text-gray-900 font-bold text-lg border-t pt-4"><span>Total</span><span>₹{total.toFixed(2)}</span></div><button className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors">Proceed to Checkout</button></div></div>) : (<div className="text-center py-16 bg-white rounded-lg shadow-md"><p className="text-gray-500 text-lg">Your cart is empty.</p></div>)}
+            {cartItems.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg space-y-4">
+                        {cartItems.map(item => (
+                            <div key={item.id} className="flex items-center justify-between border-b pb-4 last:border-b-0">
+                                <a href={item.productUrl} target="_blank" rel="noopener noreferrer" className="flex items-center flex-grow hover:opacity-80 transition-opacity">
+                                    <img src={item.imageUrls.split(',')[0]} alt={item.name} className="w-20 h-24 object-cover rounded-md mr-4"/>
+                                    <div>
+                                        <p className="font-semibold text-gray-800">{item.name}</p>
+                                        <p className="text-sm text-gray-500">{item.brand}</p>
+                                    </div>
+                                </a>
+                                <div className="flex items-center">
+                                    <p className="font-bold text-lg mr-6">₹{item.price}</p>
+                                    <button onClick={() => handleRemoveItem(item.id)} className="text-gray-500 hover:text-red-600 p-2">
+                                        {/* Assuming you have a TrashIcon component */}
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="bg-white p-6 rounded-lg shadow-lg h-fit">
+                        <h2 className="text-xl font-bold border-b pb-4 mb-4">Order Summary</h2>
+                        <div className="flex justify-between text-gray-600 mb-2">
+                            <span>Subtotal</span>
+                            {/* This line will now work correctly */}
+                            <span>₹{total.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-600 mb-4">
+                            <span>Shipping</span>
+                            <span>FREE</span>
+                        </div>
+                        <div className="flex justify-between text-gray-900 font-bold text-lg border-t pt-4">
+                            <span>Total</span>
+                             {/* This line will now work correctly */}
+                            <span>₹{total.toFixed(2)}</span>
+                        </div>
+                        <button className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors">
+                            Proceed to Checkout
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div className="text-center py-16 bg-white rounded-lg shadow-md">
+                    <p className="text-gray-500 text-lg">Your cart is empty.</p>
+                </div>
+            )}
         </main>
     );
 };
