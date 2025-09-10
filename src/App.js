@@ -183,7 +183,9 @@ const Header = ({ currentUser, onLoginClick, onLogout }) => {
         <header className="bg-gradient-to-r from-blue-50 to-indigo-100 shadow-md sticky top-0 z-20">
             <div className="container mx-auto px-4 py-3">
                 <div className="flex justify-between items-center">
-                    <Link to="/" className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700 transition-transform duration-300 hover:scale-105">SRSTYLIEDEALS</Link>
+                    <Link to="/">
+                        <img src="/srstyledeals-logo.png" alt="SRSTYLIEDEALS Logo" className="h-12 w-auto" />
+                    </Link>
                     <div className="hidden md:flex flex-grow max-w-xl mx-4 relative" ref={searchContainerRef}>
                         <form onSubmit={handleSearchSubmit} className="relative w-full">
                             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }} placeholder="Search for products, outfits, or celebrities..." className="w-full py-2 pl-5 pr-12 text-gray-800 bg-white/80 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" autoComplete="off" />
@@ -443,8 +445,6 @@ const CartPage = () => {
         const items = JSON.parse(localStorage.getItem('cartItems')) || [];
         setCartItems(items);
         
-        // --- FIX APPLIED HERE ---
-        // Convert item.price to a number before adding
         const totalPrice = items.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
         
         setTotal(totalPrice);
@@ -455,8 +455,6 @@ const CartPage = () => {
         setCartItems(updatedCart);
         localStorage.setItem('cartItems', JSON.stringify(updatedCart));
         
-        // --- FIX APPLIED HERE ---
-        // Also apply the fix when an item is removed
         const totalPrice = updatedCart.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
         
         setTotal(totalPrice);
@@ -480,8 +478,7 @@ const CartPage = () => {
                                 <div className="flex items-center">
                                     <p className="font-bold text-lg mr-6">₹{item.price}</p>
                                     <button onClick={() => handleRemoveItem(item.id)} className="text-gray-500 hover:text-red-600 p-2">
-                                        {/* Assuming you have a TrashIcon component */}
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        <TrashIcon />
                                     </button>
                                 </div>
                             </div>
@@ -491,7 +488,6 @@ const CartPage = () => {
                         <h2 className="text-xl font-bold border-b pb-4 mb-4">Order Summary</h2>
                         <div className="flex justify-between text-gray-600 mb-2">
                             <span>Subtotal</span>
-                            {/* This line will now work correctly */}
                             <span>₹{total.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-gray-600 mb-4">
@@ -500,7 +496,6 @@ const CartPage = () => {
                         </div>
                         <div className="flex justify-between text-gray-900 font-bold text-lg border-t pt-4">
                             <span>Total</span>
-                             {/* This line will now work correctly */}
                             <span>₹{total.toFixed(2)}</span>
                         </div>
                         <button className="w-full mt-6 bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors">
@@ -672,3 +667,6 @@ export default function App() {
         </Router>
     );
 }
+
+i have some typing error in the fetch please correct it
+
