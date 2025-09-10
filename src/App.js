@@ -668,5 +668,4 @@ export default function App() {
     );
 }
 
-i have some typing error in the fetch please correct it
 
